@@ -33,6 +33,7 @@ contract FundMe {
     /// @notice This function allows the user to fund the contract with ETH
     function fund() public payable {
         // payable means that the function can receive ETH
+        // when having the payable, any ETH passed in the msg.value goes directly to the contract's balance
         if (
             msg.value.getConversionRate(s_priceFeed) <
             MINIMUM_FUNDING_AMOUNT_IN_USD
@@ -94,5 +95,9 @@ contract FundMe {
 
     function getPriceFeed() public view returns (AggregatorV3Interface) {
         return s_priceFeed;
+    }
+
+    function getContractBalance() public view returns (uint256) {
+        return address(this).balance;
     }
 }

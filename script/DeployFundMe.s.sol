@@ -16,13 +16,9 @@ contract DeployFundMe is Script {
 
     function deployFundMe() public returns (FundMe, HelperConfig) {
         HelperConfig helperConfig = new HelperConfig();
-        (
-            uint256 deployerKey,
-            string memory chainName,
-            uint256 chainId,
-            address priceFeed
-        ) = helperConfig.activeNetworkConfig();
-        
+        (uint256 deployerKey, string memory chainName, uint256 chainId, address priceFeed) =
+            helperConfig.activeNetworkConfig();
+
         console.log("Deploying on chain %s with id %s", chainName, chainId);
         vm.startBroadcast(deployerKey);
         FundMe fundMe = new FundMe(priceFeed);

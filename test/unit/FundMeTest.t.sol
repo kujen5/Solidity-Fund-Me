@@ -62,6 +62,15 @@ contract FundMeTest is Test, CodeConstants, ZkSyncChainChecker {
         fundMe.withdraw();
     }
 
+    function testContractBalanceCorrectlyUpdated() public skipZkSync {
+        uint initialContractBalance = address(fundMe).balance;
+        assert(initialContractBalance == 0);
+        vm.prank(KUJEN);
+        fundMe.fund{value: VALUE_TO_FUND}();
+        uint256 finalContractBalance = address(fundMe).balance;
+        assertEq(initialContractBalance + VALUE_TO_FUND, finalContractBalance);
+    }
+
     function testPriceFeedSetCorrectly() public skipZkSync {
         address retreivedPriceFeed = address(fundMe.getPriceFeed());
         // (address expectedPriceFeed) = helperConfig.activeNetworkConfig();
