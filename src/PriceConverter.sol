@@ -8,12 +8,10 @@ library PriceConverter {
     int256 private constant DECIMALS = 10 ** 10;
 
     // We make it a library because it's gas efficient (no deployment cost for libraries), we attach the functionalities directly to uint256 vars, great for pure and view funcs
-    function getPriceInUSD(
-        AggregatorV3Interface priceFeed
-    ) internal view returns (uint256) {
-        (, int256 answer, , , ) = priceFeed.latestRoundData(); // Get only the answer from the price feed // answer is in USD $ with 8 decimals
+    function getPriceInUSD(AggregatorV3Interface priceFeed) internal view returns (uint256) {
+        (, int256 answer,,,) = priceFeed.latestRoundData(); // Get only the answer from the price feed // answer is in USD $ with 8 decimals
         return uint256(answer * DECIMALS); // We multiply by 10^10 because the answer is in 8 decimals and we want to convert it to 18 decimals
-        /* For example:
+            /* For example:
         1 ETH = 2000 USD
         priceFeed.latestRoundData().answer=200000000000
         return: 200000000000 * 10^10= 2000000000000000000000
@@ -21,10 +19,7 @@ library PriceConverter {
         */
     }
 
-    function getConversionRate(
-        uint256 ethAmount,
-        AggregatorV3Interface priceFeed
-    ) internal view returns (uint256) {
+    function getConversionRate(uint256 ethAmount, AggregatorV3Interface priceFeed) internal view returns (uint256) {
         uint256 ethPrice = getPriceInUSD(priceFeed);
         uint256 ethAmountInUSD = (ethPrice * ethAmount) / PRECISION_FACTOR; // get the whole amount in ETH, multiply by the ETH price, and divide by the precision factor to make it in USD$
         return ethAmountInUSD;

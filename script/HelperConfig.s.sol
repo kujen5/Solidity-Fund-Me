@@ -22,26 +22,23 @@ contract HelperConfig is Script, CodeConstants {
         uint256 chainID;
         address priceFeed;
     }
+
     mapping(uint256 => NetworkConfig) public networkConfigs;
+
     error HelperConfig__InvalidChainId();
 
     constructor() {
         networkConfigs[ZKSYNC_SEPOLIA_CHAIN_ID] = getZkSyncSepoliaConfig();
         networkConfigs[ETHEREUM_SEPOLIA_CHAIN_ID] = getEthSepoliaConfig();
         networkConfigs[LOCAL_ANVIL_CHAIN_ID] = getOrCreateAnvilEthConfig();
-        activeNetworkConfig = networkConfigs[block.chainid];
-    }
-
-    function getConfigByChainId(
-        uint256 _chainId
-    ) public returns (NetworkConfig memory) {
-        if (networkConfigs[_chainId].priceFeed != address(0)) {
-            return networkConfigs[_chainId];
-        } else if (_chainId == LOCAL_ANVIL_CHAIN_ID) {
-            return getOrCreateAnvilEthConfig();
+        if (networkConfigs[block.chainid].priceFeed != address(0)) {
+            activeNetworkConfig = networkConfigs[block.chainid];
+        } else if (block.chainid == LOCAL_ANVIL_CHAIN_ID) {
+            activeNetworkConfig = getOrCreateAnvilEthConfig();
         } else {
             revert HelperConfig__InvalidChainId();
         }
+        activeNetworkConfig = networkConfigs[block.chainid];
     }
 
     function getOrCreateAnvilEthConfig() public returns (NetworkConfig memory) {
@@ -52,26 +49,19 @@ contract HelperConfig is Script, CodeConstants {
         console2.log("You have deployed a mock contract!");
         console2.log("Deploying mocks...");
         vm.startBroadcast(vm.envUint("DEFAULT_ANVIL_PRIVATE_KEY"));
-        MockV3Aggregator mockPriceFeed = new MockV3Aggregator(
-            DECIMALS,
-            INITIAL_PRICE
-        );
+        MockV3Aggregator mockPriceFeed = new MockV3Aggregator(DECIMALS, INITIAL_PRICE);
         vm.stopBroadcast();
         console2.log("Mocks deployed!");
-        NetworkConfig memory activeNetworkConfig = NetworkConfig({
+        NetworkConfig memory localNetworkConfig = NetworkConfig({
             deployerKey: vm.envUint("DEFAULT_ANVIL_PRIVATE_KEY"),
             chainName: "Anvil",
             chainID: LOCAL_ANVIL_CHAIN_ID,
             priceFeed: address(mockPriceFeed)
         });
-        return activeNetworkConfig;
+        return localNetworkConfig;
     }
 
-    function getZkSyncSepoliaConfig()
-        public
-        view
-        returns (NetworkConfig memory zkSyncSepoliaNetworkConfig)
-    {
+    function getZkSyncSepoliaConfig() public view returns (NetworkConfig memory zkSyncSepoliaNetworkConfig) {
         zkSyncSepoliaNetworkConfig = NetworkConfig({
             deployerKey: vm.envUint("ZKSYNC_SEPOLIA_PRIVATE_KEY"),
             chainName: "ZkSync Sepolia",
@@ -80,11 +70,7 @@ contract HelperConfig is Script, CodeConstants {
         });
     }
 
-    function getEthSepoliaConfig()
-        public
-        view
-        returns (NetworkConfig memory ethSepoliaNetworkConfig)
-    {
+    function getEthSepoliaConfig() public view returns (NetworkConfig memory ethSepoliaNetworkConfig) {
         ethSepoliaNetworkConfig = NetworkConfig({
             deployerKey: vm.envUint("ETHEREUM_SEPOLIA_PRIVATE_KEY"),
             chainName: "Ethereum Sepolia",

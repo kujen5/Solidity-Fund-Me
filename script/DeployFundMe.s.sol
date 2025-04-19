@@ -7,7 +7,14 @@ import {HelperConfig} from "./HelperConfig.s.sol";
 import {console} from "forge-std/console.sol";
 
 contract DeployFundMe is Script {
-    function run() external returns (FundMe) {
+    struct NetworkConfig {
+        uint256 deployerKey;
+        string chainName;
+        uint256 chainID;
+        address priceFeed;
+    }
+
+    function deployFundMe() public returns (FundMe, HelperConfig) {
         HelperConfig helperConfig = new HelperConfig();
         (
             uint256 deployerKey,
@@ -15,10 +22,15 @@ contract DeployFundMe is Script {
             uint256 chainId,
             address priceFeed
         ) = helperConfig.activeNetworkConfig();
+        
         console.log("Deploying on chain %s with id %s", chainName, chainId);
         vm.startBroadcast(deployerKey);
         FundMe fundMe = new FundMe(priceFeed);
         vm.stopBroadcast();
-        return fundMe;
+        return (fundMe, helperConfig);
+    }
+
+    function run() external returns (FundMe, HelperConfig) {
+        return deployFundMe();
     }
 }

@@ -16,6 +16,7 @@ contract FundMe {
 
     error FundMe__NotOwnerOfThisContract();
     error FundMe__NotEnoughEthInFunds();
+
     event FundsAddedToContractBalance(address, uint256);
     event FundWithdrawnFromContract(uint256);
 
@@ -35,7 +36,9 @@ contract FundMe {
         if (
             msg.value.getConversionRate(s_priceFeed) <
             MINIMUM_FUNDING_AMOUNT_IN_USD
-        ) revert FundMe__NotEnoughEthInFunds();
+        ) {
+            revert FundMe__NotEnoughEthInFunds();
+        }
         AddressToAmountFunded[msg.sender] += msg.value;
         s_funders.push(msg.sender); // Add the funder to the array
         AddressToFunderIndex[msg.sender] = s_funders.length - 1; // Store the index of the funder in the array
@@ -83,5 +86,13 @@ contract FundMe {
         return s_funders[funderIndex];
     }
 
-    function getAddressToAmountFunded() public {}
+    function getAmountFundedFromSpecificAddress(
+        address _fundingAddress
+    ) public view returns (uint256) {
+        return AddressToAmountFunded[_fundingAddress];
+    }
+
+    function getPriceFeed() public view returns (AggregatorV3Interface) {
+        return s_priceFeed;
+    }
 }
