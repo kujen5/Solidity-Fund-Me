@@ -16,8 +16,7 @@ contract DeployFundMe is Script {
 
     function deployFundMe() public returns (FundMe, HelperConfig) {
         HelperConfig helperConfig = new HelperConfig();
-        HelperConfig.NetworkConfig memory config = helperConfig
-            .getConfigByChainId(block.chainid);
+        HelperConfig.NetworkConfig memory config = helperConfig.getConfigByChainId(block.chainid);
         uint256 deployerKey = config.deployerKey;
         string memory chainName = config.chainName;
         uint256 chainId = config.chainID;
