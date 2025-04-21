@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.18;
+
 import {Test, console2} from "forge-std/Test.sol";
 import {WithdrawFundMe, FundFundMe} from "../../script/Interactions.s.sol";
 import {HelperConfig, CodeConstants} from "../../script/HelperConfig.s.sol";
@@ -25,17 +26,14 @@ contract InteractionsTest is Test, ZkSyncChainChecker, CodeConstants {
         } else {
             // deploy with mock if chain is zksync
             helperConfig = new HelperConfig();
-            (, , , address priceFeed) = helperConfig.activeNetworkConfig();
+            (,,, address priceFeed) = helperConfig.activeNetworkConfig();
             address expectedPriceFeed = priceFeed;
             fundMe = new FundMe(expectedPriceFeed);
         }
         vm.deal(KUJEN, INITIAL_USER_BALANCE); // give KUJEN user 10 ether initially
     }
 
-    function testUserFundingAndOwnerWithdrawingFromContractWithoutOtherExternalFunding()
-        public
-        skipZkSync
-    {
+    function testUserFundingAndOwnerWithdrawingFromContractWithoutOtherExternalFunding() public skipZkSync {
         uint256 initialUserBalance = address(KUJEN).balance;
         uint256 initialOwnerBalance = address(fundMe.getOwner()).balance;
 

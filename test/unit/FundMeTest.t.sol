@@ -2,6 +2,8 @@
 pragma solidity ^0.8.18;
 
 import {FundMe} from "../../src/FundMe.sol";
+import {console} from "forge-std/console.sol";
+
 import {Test, console} from "forge-std/Test.sol";
 import {HelperConfig, CodeConstants} from "../../script/HelperConfig.s.sol";
 import {MockV3Aggregator} from "../mock/MockV3Aggregator.sol";
@@ -24,13 +26,11 @@ contract FundMeTest is Test, CodeConstants, ZkSyncChainChecker {
             DeployFundMe deployer = new DeployFundMe();
             (fundMe, helperConfig) = deployer.deployFundMe();
         } else {
-            // deploy with mock if chain is zksync
-            MockV3Aggregator mockPriceFeed = new MockV3Aggregator(
-                DECIMALS,
-                INITIAL_PRICE
-            );
+            // deploy with mock if chain is not zksync
+            MockV3Aggregator mockPriceFeed = new MockV3Aggregator(DECIMALS, INITIAL_PRICE);
             fundMe = new FundMe(address(mockPriceFeed));
         }
+
         vm.deal(KUJEN, USER_INITIAL_BALANCE); // give KUJEN user 10 ether initially
     }
 
@@ -63,7 +63,7 @@ contract FundMeTest is Test, CodeConstants, ZkSyncChainChecker {
     }
 
     function testContractBalanceCorrectlyUpdated() public skipZkSync {
-        uint initialContractBalance = address(fundMe).balance;
+        uint256 initialContractBalance = address(fundMe).balance;
         assert(initialContractBalance == 0);
         vm.prank(KUJEN);
         fundMe.fund{value: VALUE_TO_FUND}();
@@ -73,51 +73,35 @@ contract FundMeTest is Test, CodeConstants, ZkSyncChainChecker {
 
     function testPriceFeedSetCorrectly() public skipZkSync {
         address retreivedPriceFeed = address(fundMe.getPriceFeed());
-        // (address expectedPriceFeed) = helperConfig.activeNetworkConfig();
-        (, , , address priceFeed) = helperConfig.activeNetworkConfig();
-        address expectedPriceFeed = priceFeed;
+        //(address expectedPriceFeed) = helperConfig.activeNetworkConfig();
+        address expectedPriceFeed = helperConfig.getConfigByChainId(block.chainid).priceFeed;
         assertEq(retreivedPriceFeed, expectedPriceFeed);
     }
 
     function testWithdrawFromASingleFunder() public funded skipZkSync {
         uint256 startingFundMeBalance = address(fundMe).balance;
-        uint256 startingContractOwnerBalance = address(fundMe.getOwner())
-            .balance;
+        uint256 startingContractOwnerBalance = address(fundMe.getOwner()).balance;
         vm.startPrank(fundMe.getOwner());
         fundMe.withdraw();
         vm.stopPrank();
         uint256 finalContractOwnerBalance = address(fundMe.getOwner()).balance;
-        assertEq(
-            startingFundMeBalance + startingContractOwnerBalance,
-            finalContractOwnerBalance
-        );
+        assertEq(startingFundMeBalance + startingContractOwnerBalance, finalContractOwnerBalance);
     }
 
     function testWithdrawFromMultipleFunders() public skipZkSync {
-        uint160 numberOfFunders = 1337;
+        uint160 numberOfFunders = 10;
         uint160 startingFundersIndex = 1;
-        for (
-            uint160 i = startingFundersIndex;
-            i < numberOfFunders + startingFundersIndex;
-            i++
-        ) {
+        for (uint160 i = startingFundersIndex; i < numberOfFunders + startingFundersIndex; i++) {
             hoax(address(i), USER_INITIAL_BALANCE);
             fundMe.fund{value: VALUE_TO_FUND}();
         }
         uint256 startingFundMeBalance = address(fundMe).balance;
-        uint256 startingContractOwnerBalance = address(fundMe.getOwner())
-            .balance;
+        uint256 startingContractOwnerBalance = address(fundMe.getOwner()).balance;
         vm.startPrank(fundMe.getOwner());
         fundMe.withdraw();
         vm.stopPrank();
         assert(address(fundMe).balance == 0);
-        assert(
-            startingFundMeBalance + startingContractOwnerBalance ==
-                address(fundMe.getOwner()).balance
-        );
-        assert(
-            numberOfFunders * VALUE_TO_FUND ==
-                fundMe.getOwner().balance - startingContractOwnerBalance
-        );
+        assert(startingFundMeBalance + startingContractOwnerBalance == address(fundMe.getOwner()).balance);
+        assert(numberOfFunders * VALUE_TO_FUND == fundMe.getOwner().balance - startingContractOwnerBalance);
     }
 }

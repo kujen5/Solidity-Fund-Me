@@ -10,24 +10,17 @@ contract FundFundMe is Script {
 
     constructor() payable {}
 
-    function fundFundMe(
-        address mostRecentlyDeployedFundMeContract
-    ) public payable {
+    function fundFundMe(address mostRecentlyDeployedFundMeContract) public payable {
         vm.startBroadcast();
-        FundMe(payable(mostRecentlyDeployedFundMeContract)).fund{
-            value: VALUE_TO_FUND
-        }();
+        FundMe(payable(mostRecentlyDeployedFundMeContract)).fund{value: VALUE_TO_FUND}();
         vm.stopBroadcast();
         console.log(
-            "Just funded the FundMe contract at address %s with %s",
-            mostRecentlyDeployedFundMeContract,
-            VALUE_TO_FUND
+            "Just funded the FundMe contract at address %s with %s", mostRecentlyDeployedFundMeContract, VALUE_TO_FUND
         );
     }
 
     function run() external {
-        address mostRecentlyDeployedFundMeContract = DevOpsTools
-            .get_most_recent_deployment("FundMe", block.chainid); //use devopstools to retrieve the latest instance of FundMe on the current blockchain
+        address mostRecentlyDeployedFundMeContract = DevOpsTools.get_most_recent_deployment("FundMe", block.chainid); //use devopstools to retrieve the latest instance of FundMe on the current blockchain
         fundFundMe(mostRecentlyDeployedFundMeContract);
     }
 }
@@ -41,8 +34,7 @@ contract WithdrawFundMe is Script {
     }
 
     function run() external {
-        address mostRecentlyDeployedFundMeContract = DevOpsTools
-            .get_most_recent_deployment("FundMe", block.chainid);
+        address mostRecentlyDeployedFundMeContract = DevOpsTools.get_most_recent_deployment("FundMe", block.chainid);
         withdrawFundMe(mostRecentlyDeployedFundMeContract);
     }
 }
